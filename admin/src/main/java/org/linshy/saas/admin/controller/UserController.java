@@ -2,6 +2,7 @@ package org.linshy.saas.admin.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.result.Result;
+import org.linshy.saas.admin.common.convention.result.Results;
 import org.linshy.saas.admin.dto.resp.UserRespDTO;
 import org.linshy.saas.admin.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,10 +27,8 @@ public class UserController {
     @GetMapping("/api/shortlink/v1/user/{username}")
     public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username){
         UserRespDTO result = userService.getUserByUsername(username);
-        if(result==null)
-            return new Result<UserRespDTO>().setCode("-1").setMessage("用户查询为空");
-        else
-            return new Result<UserRespDTO>().setCode("0").setData(result);
+
+        return Results.success(result);
     }
 
 }
