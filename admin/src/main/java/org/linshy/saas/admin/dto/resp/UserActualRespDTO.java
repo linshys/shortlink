@@ -1,14 +1,12 @@
 package org.linshy.saas.admin.dto.resp;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
-import org.linshy.saas.admin.common.serialize.PhoneDesensitizationSerializer;
 
 /**
  * 用户返回参数实体
  */
 @Data
-public class UserRespDTO {
+public class UserActualRespDTO {
 
     /**
      * id
@@ -28,7 +26,6 @@ public class UserRespDTO {
     /**
      * 手机号
      */
-    @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
 
     /**
