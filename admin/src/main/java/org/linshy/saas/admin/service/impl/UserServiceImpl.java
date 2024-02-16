@@ -1,23 +1,32 @@
 package org.linshy.saas.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.exception.ClientException;
 import org.linshy.saas.admin.common.enums.UserErrorCodeEnum;
 import org.linshy.saas.admin.dao.entity.UserDO;
 import org.linshy.saas.admin.dao.mapper.UserMapper;
+import org.linshy.saas.admin.dto.req.UserRegisterReqDTO;
 import org.linshy.saas.admin.dto.resp.UserRespDTO;
 import org.linshy.saas.admin.service.UserService;
+import org.redisson.api.RBloomFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+
+import static org.linshy.saas.admin.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
+import static org.linshy.saas.admin.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
 
 /**
  * 用户接口实现层
  */
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
+    private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -38,9 +47,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public Boolean hasUsername(String username) {
-        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, username);
-        UserDO userDO = baseMapper.selectOne(queryWrapper);
+        return !userRegisterCachePenetrationBloomFilter.contains(username);
+    }
 
-        return userDO == null;
+    @Override
+    public void register(UserRegisterReqDTO requestParam) {
+        if(!hasUsername(requestParam.getUsername()))
+        {
+            throw new ClientException(USER_NAME_EXIST);
+        }
+
+        int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
+        if(insert<1)
+            throw new ClientException(USER_SAVE_ERROR);
+
+        userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+
+
     }
 }

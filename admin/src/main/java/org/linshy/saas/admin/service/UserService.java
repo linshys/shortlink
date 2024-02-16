@@ -2,6 +2,7 @@ package org.linshy.saas.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.linshy.saas.admin.dao.entity.UserDO;
+import org.linshy.saas.admin.dto.req.UserRegisterReqDTO;
 import org.linshy.saas.admin.dto.resp.UserRespDTO;
 
 public interface UserService extends IService<UserDO> {
@@ -19,4 +20,6 @@ public interface UserService extends IService<UserDO> {
      * @return Ture：用户名不存在， False：用户名存在
      */
     Boolean hasUsername(String username);
+
+    void register(UserRegisterReqDTO requestParam);
 }
