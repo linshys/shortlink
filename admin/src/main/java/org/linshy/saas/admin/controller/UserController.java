@@ -4,8 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.result.Result;
 import org.linshy.saas.admin.common.convention.result.Results;
+import org.linshy.saas.admin.dto.req.UserLoginReqDTO;
 import org.linshy.saas.admin.dto.req.UserRegisterReqDTO;
+import org.linshy.saas.admin.dto.req.UserUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.UserActualRespDTO;
+import org.linshy.saas.admin.dto.resp.UserLoginRespDTO;
 import org.linshy.saas.admin.dto.resp.UserRespDTO;
 import org.linshy.saas.admin.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -53,10 +56,46 @@ public class UserController {
         return Results.success(b);
     }
 
+    /**
+     * 注册用户
+     */
+
     @PostMapping("/api/short-link/v1/user")
     public Result<Void> register(@RequestBody UserRegisterReqDTO requestParam){
         userService.register(requestParam);
         return Results.success();
+    }
+
+    /**
+     * 修改用户
+     */
+    @PutMapping("/api/short-link/v1/user")
+    public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam)
+    {
+        userService.update(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 用户登录
+     */
+    @PostMapping("/api/short-link/v1/user/login")
+    public Result<UserLoginRespDTO>login(@RequestBody UserLoginReqDTO requestParam)
+    {
+        return Results.success(userService.login(requestParam));
+    }
+
+
+    /**
+     * 检查用户是否已经登录
+     * @param username 用户名
+     * @param token 用户令牌
+     * @return  ture or false
+     */
+    @GetMapping("/api/short-link/v1/user/check-login")
+    public Result<Boolean>checkLogin(@RequestParam("username") String username, @RequestParam("token")String token){
+
+        return Results.success(userService.checkLogin(username,token));
     }
 
 
