@@ -76,10 +76,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         finally {
             lock.unlock();
         }
-
-
-
-
-
     }
 }
