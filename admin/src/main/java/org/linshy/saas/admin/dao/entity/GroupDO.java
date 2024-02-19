@@ -2,15 +2,14 @@ package org.linshy.saas.admin.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-
-import java.util.Date;
+import org.linshy.saas.admin.common.database.BaseDO;
 
 /**
  * 短链接分组实体
  */
 @Data
 @TableName("t_group")
-public class GroupDO {
+public class GroupDO extends BaseDO {
 
     /**
      * id
@@ -32,18 +31,4 @@ public class GroupDO {
      */
     private String username;
 
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 修改时间
-     */
-    private Date updateTime;
-
-    /**
-     * 删除标识 0：未删除 1：已删除
-     */
-    private Integer delFlag;
 }
