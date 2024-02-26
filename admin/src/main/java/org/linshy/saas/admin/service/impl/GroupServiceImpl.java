@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.linshy.saas.admin.common.biz.user.UserContext;
 import org.linshy.saas.admin.dao.entity.GroupDO;
 import org.linshy.saas.admin.dao.mapper.GroupMapper;
+import org.linshy.saas.admin.dto.req.ShortLinkGroupSortReqDTO;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.ShortLinkGroupRespDTO;
 import org.linshy.saas.admin.service.GroupService;
@@ -85,6 +86,21 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = new GroupDO();
         groupDO.setDelFlag(1);
         baseMapper.update(groupDO,updateWrapper);
+    }
+
+    @Override
+    public void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam) {
+        requestParam.forEach(each -> {
+            GroupDO groupDO = new GroupDO();
+            groupDO.setSortOrder(each.getSortOrder());
+
+            LambdaQueryWrapper<GroupDO> updateWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                    .eq(GroupDO::getGid, each.getGid())
+                    .eq(GroupDO::getDelFlag, 0)
+                    .eq(GroupDO::getUsername, UserContext.getUsername());
+
+            baseMapper.update(groupDO, updateWrapper);
+        });
     }
 
     /**

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.result.Result;
 import org.linshy.saas.admin.common.convention.result.Results;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import org.linshy.saas.admin.dto.req.ShortLinkGroupSortReqDTO;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.ShortLinkGroupRespDTO;
 import org.linshy.saas.admin.service.GroupService;
@@ -64,6 +65,19 @@ public class GroupController {
     public Result<Void> deleteGroup(@RequestParam String gid)
     {
         groupService.deleteGroup(gid);
+        return Results.success(null);
+
+    }
+
+    /**
+     * 更改分组的排序
+     * @param requestParam 每个分组的排序参数
+     * @return void
+     */
+    @PostMapping("/api/short-link/v1/group/sort")
+    public Result<Void> sortGroup(@RequestBody List<ShortLinkGroupSortReqDTO> requestParam)
+    {
+        groupService.sortGroup(requestParam);
         return Results.success(null);
 
     }

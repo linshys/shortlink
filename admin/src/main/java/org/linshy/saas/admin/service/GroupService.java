@@ -2,6 +2,7 @@ package org.linshy.saas.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.linshy.saas.admin.dao.entity.GroupDO;
+import org.linshy.saas.admin.dto.req.ShortLinkGroupSortReqDTO;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.ShortLinkGroupRespDTO;
 
@@ -27,4 +28,7 @@ public interface GroupService extends IService<GroupDO> {
     void update(ShortLinkGroupUpdateReqDTO requestParam);
 
     void deleteGroup(String gid);
+
+    void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam);
+
 }
