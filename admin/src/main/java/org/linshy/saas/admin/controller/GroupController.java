@@ -4,12 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.result.Result;
 import org.linshy.saas.admin.common.convention.result.Results;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import org.linshy.saas.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.ShortLinkGroupRespDTO;
 import org.linshy.saas.admin.service.GroupService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,4 +39,14 @@ public class GroupController {
     {
         return Results.success(groupService.listGroup());
     }
+
+
+    @PutMapping("/api/short-link/v1/group")
+    public Result<Void> update(@RequestBody ShortLinkGroupUpdateReqDTO requestParam)
+    {
+        groupService.update(requestParam);
+        return Results.success(null);
+
+    }
+
 }

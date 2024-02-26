@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.linshy.saas.admin.common.biz.user.UserContext;
 import org.linshy.saas.admin.dao.entity.GroupDO;
 import org.linshy.saas.admin.dao.mapper.GroupMapper;
+import org.linshy.saas.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.ShortLinkGroupRespDTO;
 import org.linshy.saas.admin.service.GroupService;
 import org.linshy.saas.admin.toolkit.RandomStringGenerator;
@@ -57,6 +58,22 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
         return BeanUtil.copyToList(list, ShortLinkGroupRespDTO.class);
 
+    }
+
+    /**
+     * 更新分组名称
+     * @param requestParam 参数
+     */
+
+    @Override
+    public void update(ShortLinkGroupUpdateReqDTO requestParam) {
+        LambdaQueryWrapper<GroupDO> updateWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getDelFlag, 0)
+                .eq(GroupDO::getUsername, UserContext.getUsername());
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(requestParam.getName());
+        baseMapper.update(groupDO,updateWrapper);
     }
 
     /**
