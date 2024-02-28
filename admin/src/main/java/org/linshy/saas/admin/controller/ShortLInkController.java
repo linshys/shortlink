@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class ShortLInkController {
+    // TODO 后续用Feign调用重构
      ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
      };
 
