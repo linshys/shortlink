@@ -1,6 +1,9 @@
 package org.linshy.saas.project.service.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +11,9 @@ import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dao.mapper.ShortLinkMapper;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.resp.ShortLInkCreateRespDTO;
+import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
 import org.linshy.saas.project.service.ShortLinkService;
 import org.linshy.saas.project.toolkit.HashUtil;
 import org.redisson.api.RBloomFilter;
@@ -47,6 +52,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .gid(requestParam.getGid())
                 .originUrl(requestParam.getOriginUrl())
                 .build();
+    }
+
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+        LambdaQueryWrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getEnableStatus, 0)
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .orderByDesc(ShortLinkDO::getCreateTime);
+        IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, wrapper);
+        return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
     private String generateSuffix(ShortLInkCreateReqDTO requestParam)
