@@ -6,6 +6,7 @@ import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
@@ -53,6 +54,17 @@ public class ShortLInkController {
     public Result<List<ShortLinkCountQueryRespDTO>> listGroupShortLinkCount(@RequestParam("requestParam") List<String> requestParam)
     {
         return Results.success(shortLinkService.listGroupShortLinkCount(requestParam));
+    }
+
+    /**
+     * 修改短链接信息
+     */
+    @PostMapping("/api/short-link/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam)
+    {
+        shortLinkService.updateShortLink(requestParam);
+        return Results.success(null);
+
     }
 
 

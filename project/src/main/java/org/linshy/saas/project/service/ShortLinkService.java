@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
@@ -28,4 +29,12 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * 查询用户所有分组下短链接数量
      */
     List<ShortLinkCountQueryRespDTO> listGroupShortLinkCount(List<String> requestParam);
+
+    /**
+     * 修改短链接信息
+     *
+     * @param requestParam 请求参数
+     */
+    void updateShortLink(ShortLinkUpdateReqDTO requestParam);
+
 }
