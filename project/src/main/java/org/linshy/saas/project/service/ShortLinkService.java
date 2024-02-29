@@ -2,6 +2,8 @@ package org.linshy.saas.project.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
@@ -37,4 +39,12 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      */
     void updateShortLink(ShortLinkUpdateReqDTO requestParam);
 
+
+    /**
+     * 短链接重定向
+     * @param shortUri 短链接
+     * @param request http请求
+     * @param response http响应
+     */
+    void restoreUrl(String shortUri, ServletRequest request, ServletResponse response);
 }

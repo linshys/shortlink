@@ -1,6 +1,8 @@
 package org.linshy.saas.project.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
@@ -33,6 +35,20 @@ public class ShortLInkController {
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLInkCreateReqDTO requestParam)
     {
         return Results.success(shortLinkService.createShortLink(requestParam));
+    }
+
+
+    /**
+     * 短链接重定向
+     * @param shortUri 短链接
+     * @param request http请求
+     * @param response http响应
+     */
+    @GetMapping("/{short_uri}")
+    public void restoreUrl(@PathVariable("short_uri") String shortUri, ServletRequest request, ServletResponse response)
+    {
+        shortLinkService.restoreUrl(shortUri, request, response);
+        return;
     }
 
 
