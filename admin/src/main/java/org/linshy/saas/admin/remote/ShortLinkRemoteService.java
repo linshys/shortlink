@@ -1,4 +1,4 @@
-package org.linshy.saas.admin.remote.dto;
+package org.linshy.saas.admin.remote;
 
 
 import cn.hutool.http.HttpUtil;
