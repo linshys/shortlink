@@ -3,7 +3,7 @@ package org.linshy.saas.admin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.result.Result;
-import org.linshy.saas.admin.remote.dto.ShortLinkRemoteService;
+import org.linshy.saas.admin.remote.ShortLinkRemoteService;
 import org.linshy.saas.admin.remote.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.admin.remote.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.admin.remote.dto.resp.ShortLInkCreateRespDTO;

@@ -16,6 +16,7 @@ import org.linshy.saas.admin.dto.req.UserRegisterReqDTO;
 import org.linshy.saas.admin.dto.req.UserUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.UserLoginRespDTO;
 import org.linshy.saas.admin.dto.resp.UserRespDTO;
+import org.linshy.saas.admin.service.GroupService;
 import org.linshy.saas.admin.service.UserService;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
@@ -41,6 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
+    private final GroupService groupService;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -86,6 +88,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 }
 
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+                // 用户注册自动创建默认分组
+                groupService.save(requestParam.getUsername(),"默认分组");
                 return;
             }
             throw new ClientException(USER_NAME_EXIST);

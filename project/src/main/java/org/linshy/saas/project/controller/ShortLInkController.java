@@ -6,13 +6,13 @@ import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
-import org.linshy.saas.project.dto.resp.ShortLInkCreateRespDTO;
+import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
+import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
 import org.linshy.saas.project.service.ShortLinkService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 短链接管理控制层
@@ -29,7 +29,7 @@ public class ShortLInkController {
      * @return 短链接信息
      */
     @PostMapping("/api/short-link/v1/create")
-    public Result<ShortLInkCreateRespDTO> createShortLink(@RequestBody ShortLInkCreateReqDTO requestParam)
+    public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLInkCreateReqDTO requestParam)
     {
         return Results.success(shortLinkService.createShortLink(requestParam));
     }
@@ -42,6 +42,17 @@ public class ShortLInkController {
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam)
     {
         return Results.success(shortLinkService.pageShortLink(requestParam));
+    }
+
+    /**
+     * 查询分组下短链接数量
+     * @param requestParam 短链接数量请求参数
+     * @return 短链接数量响应参数
+     */
+    @GetMapping("/api/short-link/v1/count")
+    public Result<List<ShortLinkCountQueryRespDTO>> listGroupShortLinkCount(@RequestParam("requestParam") List<String> requestParam)
+    {
+        return Results.success(shortLinkService.listGroupShortLinkCount(requestParam));
     }
 
 
