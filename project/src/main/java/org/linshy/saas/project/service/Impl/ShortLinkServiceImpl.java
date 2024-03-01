@@ -168,6 +168,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
         if (!contains)
         {
+            ((HttpServletResponse)response).sendRedirect("/page/notfound");
             return;
         }
         // c. 查询短链接是否存在
@@ -175,6 +176,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         if (StrUtil.isBlank(gotoIsNullShortLink))
         {
             // 不存在，返回
+            ((HttpServletResponse)response).sendRedirect("/page/notfound");
             return;
         }
 
@@ -201,6 +203,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             {
                 // d. 布隆过滤器误判， 短链接确实不存在
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl),"-",30, TimeUnit.SECONDS);
+                ((HttpServletResponse)response).sendRedirect("/page/notfound");
                 return;
             }
 
@@ -217,6 +220,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 // 检查短链接是否过期
                 if (shortLinkDO.getValidDate()!=null && shortLinkDO.getValidDate().before(new Date()))
                 {
+                    ((HttpServletResponse)response).sendRedirect("/page/notfound");
                     return;
                 }
 
