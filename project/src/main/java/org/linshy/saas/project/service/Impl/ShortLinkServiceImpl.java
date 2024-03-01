@@ -38,9 +38,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
-import static org.linshy.saas.project.common.constant.RedisKeyConstant.GOTO_SHORT_LINK_KEY;
-import static org.linshy.saas.project.common.constant.RedisKeyConstant.LOCK_GOTO_SHORT_LINK_KEY;
+import static org.linshy.saas.project.common.constant.RedisKeyConstant.*;
 
 
 @Slf4j
@@ -146,13 +146,28 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public void restoreUrl(String shortUri, ServletRequest request, ServletResponse response) {
         String serverName = request.getServerName();
         String fullShortUrl = serverName + "/" + shortUri;
-        // 1. 检查redis缓存中是否存在
+        // 缓存击穿问题 1.a.  检查redis缓存中是否存在
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink))
         {
             ((HttpServletResponse)response).sendRedirect(originalLink);
             return;
         }
+
+        // 缓存穿透问题 b. 查询布隆过滤器中短链接是否存在
+        boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
+        if (!contains)
+        {
+            return;
+        }
+        // c. 查询短链接是否存在
+        String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
+        if (StrUtil.isBlank(gotoIsNullShortLink))
+        {
+            // 不存在，返回
+            return;
+        }
+
 
         // 2. 不存在上锁查数据库
         RLock lock = redissonClient.getLock(String.format(LOCK_GOTO_SHORT_LINK_KEY, fullShortUrl));
@@ -174,7 +189,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
             if(shortLinkGotoDO==null)
             {
-                // 需要更严谨的处理方法
+                // d. 布隆过滤器误判， 短链接确实不存在
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl),"-",30, TimeUnit.SECONDS);
                 return;
             }
 
