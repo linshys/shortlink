@@ -28,6 +28,7 @@ import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
 import org.linshy.saas.project.service.ShortLinkService;
 import org.linshy.saas.project.toolkit.HashUtil;
+import org.linshy.saas.project.toolkit.LinkUtil;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -61,26 +62,34 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
         ShortLinkDO shortLinkDO = BeanUtil.toBean(requestParam, ShortLinkDO.class);
         String shortLink = this.generateSuffix(requestParam);
+        String fullShortUrl = requestParam.getDomain() + '/' + shortLink;
         shortLinkDO.setShortUri(shortLink);
         shortLinkDO.setEnableStatus(0);
-        shortLinkDO.setFullShortUrl(requestParam.getDomain()+'/'+ shortLink);
+        shortLinkDO.setFullShortUrl(fullShortUrl);
 
         try {
             baseMapper.insert(shortLinkDO);
         }
         catch (DuplicateKeyException ex)
         {
-            shortUriCreateCachePenetrationBloomFilter.add(requestParam.getDomain()+'/'+ shortLink);
-            log.warn("短链接: {} 重复入库",requestParam.getDomain()+'/'+ shortLink);
+            shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
+            log.warn("短链接: {} 重复入库", fullShortUrl);
             throw new ServiceException("短链接生成重复");
         }
-        shortUriCreateCachePenetrationBloomFilter.add(requestParam.getDomain()+'/'+ shortLink);
+        shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
+
+        /**
+         * 缓存预热
+         */
+        stringRedisTemplate.opsForValue()
+                .set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), requestParam.getOriginUrl(),
+                        LinkUtil.getLinkCacheValidDate(requestParam.getValidDate()), TimeUnit.MILLISECONDS);
 
         /**
          * 将短链接信息加入跳转表
          */
         ShortLinkGotoDO shortLinkGotoDO = ShortLinkGotoDO.builder()
-                .full_short_url(requestParam.getDomain() + '/' + shortLink)
+                .full_short_url(fullShortUrl)
                 .gid(requestParam.getGid())
                 .build();
         shortLinkGotoMapper.insert(shortLinkGotoDO);
@@ -205,7 +214,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkDO shortLinkDO = baseMapper.selectOne(wrapper);
             if (shortLinkDO!=null) {
                 String originUrl = shortLinkDO.getOriginUrl();
-                stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), originUrl);
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), originUrl,
+                        LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
+
                 ((HttpServletResponse)response).sendRedirect(originUrl);
             }
 
