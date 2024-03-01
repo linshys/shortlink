@@ -36,6 +36,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -213,6 +214,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
             ShortLinkDO shortLinkDO = baseMapper.selectOne(wrapper);
             if (shortLinkDO!=null) {
+                // 检查短链接是否过期
+                if (shortLinkDO.getValidDate()!=null && shortLinkDO.getValidDate().before(new Date()))
+                {
+                    return;
+                }
+
                 String originUrl = shortLinkDO.getOriginUrl();
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), originUrl,
                         LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
