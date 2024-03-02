@@ -9,6 +9,7 @@ import org.linshy.saas.admin.common.convention.result.Result;
 import org.linshy.saas.admin.dto.req.RecycleBinSaveReqDTO;
 import org.linshy.saas.admin.remote.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.admin.remote.dto.req.ShortLinkPageReqDTO;
+import org.linshy.saas.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import org.linshy.saas.admin.remote.dto.req.ShortLinkUpdateReqDTO;
 import org.linshy.saas.admin.remote.dto.resp.ShortLInkCreateRespDTO;
 import org.linshy.saas.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
@@ -84,10 +85,27 @@ public interface ShortLinkRemoteService {
         });
     }
 
-
+    /**
+     * 短链接移入回收站
+     * @param recycleBinSaveReqDTO
+     */
     default void saveRecycleBin(RecycleBinSaveReqDTO recycleBinSaveReqDTO)
     {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/save",JSON.toJSONString(recycleBinSaveReqDTO));
         return;
     };
+
+    /**
+     * 回收站分页查询
+     */
+    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO requestParam)
+    {
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("gidList", requestParam.getGidList());
+        requestMap.put("current", requestParam.getCurrent());
+        requestMap.put("size", requestParam.getSize());
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page",requestMap);
+        return JSON.parseObject(resultPageStr, new TypeReference<>() {
+        });
+    }
 }
