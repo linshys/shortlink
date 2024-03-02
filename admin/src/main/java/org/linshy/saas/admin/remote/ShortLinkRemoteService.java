@@ -7,10 +7,7 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.linshy.saas.admin.common.convention.result.Result;
 import org.linshy.saas.admin.dto.req.RecycleBinSaveReqDTO;
-import org.linshy.saas.admin.remote.dto.req.ShortLInkCreateReqDTO;
-import org.linshy.saas.admin.remote.dto.req.ShortLinkPageReqDTO;
-import org.linshy.saas.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
-import org.linshy.saas.admin.remote.dto.req.ShortLinkUpdateReqDTO;
+import org.linshy.saas.admin.remote.dto.req.*;
 import org.linshy.saas.admin.remote.dto.resp.ShortLInkCreateRespDTO;
 import org.linshy.saas.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.admin.remote.dto.resp.ShortLinkPageRespDTO;
@@ -107,5 +104,14 @@ public interface ShortLinkRemoteService {
         String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page",requestMap);
         return JSON.parseObject(resultPageStr, new TypeReference<>() {
         });
+    }
+
+    /**
+     * 移出回收站
+     */
+    default void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam)
+    {
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/recover",JSON.toJSONString(requestParam));
+        return;
     }
 }

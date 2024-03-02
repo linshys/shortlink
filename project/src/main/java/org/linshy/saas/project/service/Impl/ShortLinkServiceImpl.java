@@ -173,10 +173,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
-        // c. 查询短链接是否存在
+        // c. 查询短链接是否为空
         String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
-        if (StrUtil.isBlank(gotoIsNullShortLink)) {
-            // 不存在，返回
+        if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
+            // 为空，返回
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
