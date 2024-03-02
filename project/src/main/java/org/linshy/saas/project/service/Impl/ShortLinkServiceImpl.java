@@ -14,6 +14,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.common.enums.VaildDataTypeEnum;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
@@ -36,6 +39,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +72,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         shortLinkDO.setShortUri(shortLink);
         shortLinkDO.setEnableStatus(0);
         shortLinkDO.setFullShortUrl(fullShortUrl);
+        shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
 
         try {
             baseMapper.insert(shortLinkDO);
-        }
-        catch (DuplicateKeyException ex)
-        {
+        } catch (DuplicateKeyException ex) {
             shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
             log.warn("短链接: {} 重复入库", fullShortUrl);
             throw new ServiceException("短链接生成重复");
@@ -112,21 +116,21 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .orderByDesc(ShortLinkDO::getCreateTime);
         IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, wrapper);
         return resultPage.convert(each -> {
-                    ShortLinkPageRespDTO result = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
-                    result.setDomain("http://" + result.getDomain());
-                    return result;
-                });
+            ShortLinkPageRespDTO result = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
+            result.setDomain("http://" + result.getDomain());
+            return result;
+        });
     }
 
     @Override
     public List<ShortLinkCountQueryRespDTO> listGroupShortLinkCount(List<String> requestParam) {
         QueryWrapper<ShortLinkDO> queryWrapper = Wrappers.query(new ShortLinkDO())
                 .select("gid as gid, count(*) as shortLinkCount")
-                .in("gid",requestParam)
+                .in("gid", requestParam)
                 .eq("enable_status", 0)
                 .groupBy("gid");
         List<Map<String, Object>> mapList = baseMapper.selectMaps(queryWrapper);
-        return BeanUtil.copyToList(mapList,ShortLinkCountQueryRespDTO.class);
+        return BeanUtil.copyToList(mapList, ShortLinkCountQueryRespDTO.class);
     }
 
     @Override
@@ -158,25 +162,22 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String fullShortUrl = serverName + "/" + shortUri;
         // 缓存击穿问题 1.a.  检查redis缓存中是否存在
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
-        if (StrUtil.isNotBlank(originalLink))
-        {
-            ((HttpServletResponse)response).sendRedirect(originalLink);
+        if (StrUtil.isNotBlank(originalLink)) {
+            ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
         }
 
         // 缓存穿透问题 b. 查询布隆过滤器中短链接是否存在
         boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
-        if (!contains)
-        {
-            ((HttpServletResponse)response).sendRedirect("/page/notfound");
+        if (!contains) {
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
         // c. 查询短链接是否存在
         String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
-        if (StrUtil.isBlank(gotoIsNullShortLink))
-        {
+        if (StrUtil.isBlank(gotoIsNullShortLink)) {
             // 不存在，返回
-            ((HttpServletResponse)response).sendRedirect("/page/notfound");
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
 
@@ -187,9 +188,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             // 3. 双检加锁策略，再次检查redis，防止多人拿到锁
             originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
-            if (StrUtil.isNotBlank(originalLink))
-            {
-                ((HttpServletResponse)response).sendRedirect(originalLink);
+            if (StrUtil.isNotBlank(originalLink)) {
+                ((HttpServletResponse) response).sendRedirect(originalLink);
                 return;
             }
 
@@ -199,14 +199,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
                     .eq(ShortLinkGotoDO::getFull_short_url, fullShortUrl);
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
-            if(shortLinkGotoDO==null)
-            {
+            if (shortLinkGotoDO == null) {
                 // d. 布隆过滤器误判， 短链接确实不存在
-                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl),"-",30, TimeUnit.SECONDS);
-                ((HttpServletResponse)response).sendRedirect("/page/notfound");
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.SECONDS);
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
                 return;
             }
-
 
 
             LambdaQueryWrapper<ShortLinkDO> wrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
@@ -216,11 +214,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getFullShortUrl, fullShortUrl);
 
             ShortLinkDO shortLinkDO = baseMapper.selectOne(wrapper);
-            if (shortLinkDO!=null) {
+            if (shortLinkDO != null) {
                 // 检查短链接是否过期
-                if (shortLinkDO.getValidDate()!=null && shortLinkDO.getValidDate().before(new Date()))
-                {
-                    ((HttpServletResponse)response).sendRedirect("/page/notfound");
+                if (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())) {
+                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
                     return;
                 }
 
@@ -228,34 +225,48 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), originUrl,
                         LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
 
-                ((HttpServletResponse)response).sendRedirect(originUrl);
+                ((HttpServletResponse) response).sendRedirect(originUrl);
             }
 
-        }
-        finally {
+        } finally {
             lock.unlock();
         }
     }
 
-    private String generateSuffix(ShortLInkCreateReqDTO requestParam)
-    {
+    private String generateSuffix(ShortLInkCreateReqDTO requestParam) {
         String originUrl = requestParam.getOriginUrl();
         int customGenerateCount = 0;
         String shortUri;
-        while(true)
-        {
-            if (customGenerateCount>10)
-            {
+        while (true) {
+            if (customGenerateCount > 10) {
                 throw new ServiceException("短链接创建次数过多，请稍后重试");
             }
             originUrl += System.currentTimeMillis();
             shortUri = HashUtil.hashToBase62(originUrl);
-            if (!shortUriCreateCachePenetrationBloomFilter.contains(requestParam.getDomain()+'/'+ shortUri))
-            {
+            if (!shortUriCreateCachePenetrationBloomFilter.contains(requestParam.getDomain() + '/' + shortUri)) {
                 break;
             }
             ++customGenerateCount;
         }
         return shortUri;
     }
+
+
+    @SneakyThrows
+    private String getFavicon(String url) {
+        URL targetUrl = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) targetUrl.openConnection();
+        connection.setRequestMethod("GET");
+        connection.connect();
+        int responseCode = connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            Document document = Jsoup.connect(url).get();
+            Element faviconLink = document.select("link[rel~=(?i)^(shortcut )?icon]").first();
+            if (faviconLink != null) {
+                return faviconLink.attr("abs:href");
+            }
+        }
+        return null;
+    }
 }
+
