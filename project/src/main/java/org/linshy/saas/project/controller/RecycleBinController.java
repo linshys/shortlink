@@ -5,8 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
 import org.linshy.saas.project.dto.req.RecycleBinRecoverReqDTO;
-import org.linshy.saas.project.dto.req.ShortLinkRecycleBinPageReqDTO;
+import org.linshy.saas.project.dto.req.RecycleBinRemoveReqDTO;
 import org.linshy.saas.project.dto.req.RecycleBinSaveReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
 import org.linshy.saas.project.service.RecycleBinService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,10 +58,10 @@ public class RecycleBinController {
      * 彻底删除回收站短链接
      * @param requestParam 请求参数{gid,fullShortUrl}
      */
-    @PostMapping("/api/short-link/v1/recycle-bin/recover")
-    public Result<Void> removeRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam)
+    @PostMapping("/api/short-link/v1/recycle-bin/remove")
+    public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam)
     {
-        recycleBinService.recoverRecycleBin(requestParam);
+        recycleBinService.removeRecycleBin(requestParam);
         return Results.success();
     }
 

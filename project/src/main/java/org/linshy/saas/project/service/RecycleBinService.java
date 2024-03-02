@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dto.req.RecycleBinRecoverReqDTO;
+import org.linshy.saas.project.dto.req.RecycleBinRemoveReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import org.linshy.saas.project.dto.req.RecycleBinSaveReqDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
@@ -32,4 +33,9 @@ public interface RecycleBinService extends IService<ShortLinkDO> {
      * @param requestParam 请求参数
      */
     void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam);
+
+    /**
+     * 彻底移除回收站短链接
+     */
+    void removeRecycleBin(RecycleBinRemoveReqDTO requestParam);
 }
