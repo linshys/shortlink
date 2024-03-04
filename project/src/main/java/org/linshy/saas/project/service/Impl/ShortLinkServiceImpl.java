@@ -54,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.linshy.saas.project.common.constant.RedisKeyConstant.*;
+import static org.linshy.saas.project.toolkit.LinkUtil.getActualIp;
 
 
 @Slf4j
@@ -279,9 +280,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .map(Cookie::getValue)
                         .ifPresentOrElse(each->
                         {
-                            Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
+                            Long uvAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
                             // 缓存添加成功证明是新用户
-                            uvFirstFlag.set(added!=null&& added>0L);
+                            uvFirstFlag.set(uvAdded!=null&& uvAdded>0L);
 
                         }, addResponseCookieTask);
             }
@@ -289,6 +290,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 addResponseCookieTask.run();
             }
 
+            // 防止uip重复
+            String uip = getActualIp((HttpServletRequest) request);
+            Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, uip);
+            Boolean uipFirstFlag = (uipAdded!=null&& uipAdded>0L);
 
             if (StrUtil.isBlank(gid))
             {
@@ -305,7 +310,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .gid(gid)
                     .uv(uvFirstFlag.get()? 1:0)
                     .pv(1)
-                    .uip(1)
+                    .uip(uipFirstFlag? 1:0)
                     .date(new Date())
                     .hour(hour)
                     .weekday(weekValue)
