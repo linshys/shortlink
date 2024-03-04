@@ -1,6 +1,8 @@
 package org.linshy.saas.project.service.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.Week;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -19,8 +21,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.common.enums.VaildDataTypeEnum;
+import org.linshy.saas.project.dao.entity.LinkAccessStatsDO;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dao.entity.ShortLinkGotoDO;
+import org.linshy.saas.project.dao.mapper.LinkAccessStatsMapper;
 import org.linshy.saas.project.dao.mapper.ShortLinkGotoMapper;
 import org.linshy.saas.project.dao.mapper.ShortLinkMapper;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
@@ -62,6 +66,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
 
     private final RedissonClient redissonClient;
+
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLInkCreateReqDTO requestParam) {
@@ -163,6 +169,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 缓存击穿问题 1.a.  检查redis缓存中是否存在
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink)) {
+            // 记录短链接访问信息
+            shortLinkStats(fullShortUrl,null,request,response);
             ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
         }
@@ -189,6 +197,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             // 3. 双检加锁策略，再次检查redis，防止多人拿到锁
             originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
             if (StrUtil.isNotBlank(originalLink)) {
+                // 记录短链接访问信息
+                shortLinkStats(fullShortUrl,null,request,response);
                 ((HttpServletResponse) response).sendRedirect(originalLink);
                 return;
             }
@@ -224,7 +234,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 String originUrl = shortLinkDO.getOriginUrl();
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), originUrl,
                         LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
-
+                // 记录短链接访问信息
+                shortLinkStats(fullShortUrl,shortLinkDO.getGid(),request,response);
                 ((HttpServletResponse) response).sendRedirect(originUrl);
             }
 
@@ -232,6 +243,39 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             lock.unlock();
         }
     }
+
+    /**
+     * 记录短链接访问信息
+     * @param fullShortUrl 短链接
+     * @param gid 分组标识
+     * @param request http请求
+     * @param response http响应
+     */
+    private void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response)
+    {
+        if (StrUtil.isBlank(gid))
+        {
+            LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                    .eq(ShortLinkGotoDO::getFull_short_url, fullShortUrl);
+            ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
+            gid = shortLinkGotoDO.getGid();
+        }
+        int hour = DateUtil.hour(new Date(), true);
+        Week week = DateUtil.dayOfWeekEnum(new Date());
+        int weekValue = week.getIso8601Value();
+        LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
+                .fullShortUrl(fullShortUrl)
+                .gid(gid)
+                .uv(1)
+                .pv(1)
+                .uip(1)
+                .date(new Date())
+                .hour(hour)
+                .weekday(weekValue)
+                .build();
+        linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+    }
+
 
     private String generateSuffix(ShortLInkCreateReqDTO requestParam) {
         String originUrl = requestParam.getOriginUrl();
