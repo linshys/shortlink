@@ -3,6 +3,8 @@ package org.linshy.saas.project.service.Impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
+import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -12,6 +14,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -45,11 +49,9 @@ import org.springframework.stereotype.Service;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.linshy.saas.project.common.constant.RedisKeyConstant.*;
 
@@ -253,27 +255,69 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      */
     private void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response)
     {
-        if (StrUtil.isBlank(gid))
-        {
-            LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
-                    .eq(ShortLinkGotoDO::getFull_short_url, fullShortUrl);
-            ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
-            gid = shortLinkGotoDO.getGid();
+        // 通过cookie来进行uv判断
+        AtomicBoolean uvFirstFlag = new AtomicBoolean();
+        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+
+        try {
+            Runnable addResponseCookieTask =  ()->{
+                // 生成cookie
+                String uv = UUID.fastUUID().toString();
+                Cookie uvCookie = new Cookie("uv", uv);
+                // 持续生效一个月
+                uvCookie.setMaxAge(60*60*24*30);
+                uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.indexOf("/"), fullShortUrl.length()));
+                ((HttpServletResponse) response).addCookie(uvCookie);
+                stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, uv);
+                uvFirstFlag.set(true);
+            };
+            if (ArrayUtil.isNotEmpty(cookies))
+            {
+                Arrays.stream(cookies)
+                        .filter(each-> Objects.equals(each.getName(),"uv"))
+                        .findFirst()
+                        .map(Cookie::getValue)
+                        .ifPresentOrElse(each->
+                        {
+                            Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
+                            // 缓存添加成功证明是新用户
+                            uvFirstFlag.set(added!=null&& added>0L);
+
+                        }, addResponseCookieTask);
+            }
+            else {
+                addResponseCookieTask.run();
+            }
+
+
+            if (StrUtil.isBlank(gid))
+            {
+                LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                        .eq(ShortLinkGotoDO::getFull_short_url, fullShortUrl);
+                ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
+                gid = shortLinkGotoDO.getGid();
+            }
+            int hour = DateUtil.hour(new Date(), true);
+            Week week = DateUtil.dayOfWeekEnum(new Date());
+            int weekValue = week.getIso8601Value();
+            LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .uv(uvFirstFlag.get()? 1:0)
+                    .pv(1)
+                    .uip(1)
+                    .date(new Date())
+                    .hour(hour)
+                    .weekday(weekValue)
+                    .build();
+            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+
         }
-        int hour = DateUtil.hour(new Date(), true);
-        Week week = DateUtil.dayOfWeekEnum(new Date());
-        int weekValue = week.getIso8601Value();
-        LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
-                .fullShortUrl(fullShortUrl)
-                .gid(gid)
-                .uv(1)
-                .pv(1)
-                .uip(1)
-                .date(new Date())
-                .hour(hour)
-                .weekday(weekValue)
-                .build();
-        linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+        catch (Throwable ex)
+        {
+            log.error("短链接访问量统计异常",ex);
+        }
+
     }
 
 
