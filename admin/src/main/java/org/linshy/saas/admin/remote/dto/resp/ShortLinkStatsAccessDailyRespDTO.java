@@ -1,4 +1,4 @@
-package org.linshy.saas.project.dto.resp;
+package org.linshy.saas.admin.remote.dto.resp;
 
 import lombok.Data;
 
