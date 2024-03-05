@@ -75,6 +75,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final LinkNetworkStatsMapper linkNetworkStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLccalAmapKey;
@@ -360,7 +361,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .os(os)
                     .build();
             linkOsStatsMapper.shortLinkOsStats(linkOsStatsDO);
-
             // 统计用户浏览器信息
             String browser = LinkUtil.getBrowser((HttpServletRequest) request);
             LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
@@ -371,7 +371,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .browser(browser)
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserStats(linkBrowserStatsDO);
-
             // 统计高频ip
             LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
                     .fullShortUrl(fullShortUrl)
@@ -391,6 +390,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+            // 统计用户网络类型
+            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                    .network(LinkUtil.getNetwork(((HttpServletRequest) request)))
+                    .cnt(1)
+                    .gid(gid)
+                    .fullShortUrl(fullShortUrl)
+                    .date(new Date())
+                    .build();
+            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
         }
         catch (Throwable ex)
         {

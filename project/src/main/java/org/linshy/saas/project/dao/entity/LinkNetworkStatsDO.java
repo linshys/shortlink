@@ -10,14 +10,14 @@ import org.linshy.saas.project.common.database.BaseDO;
 import java.util.Date;
 
 /**
- * 短链接用户访问设备对象
+ * 短链接用户网络类型（移动/Wifi）对象
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @TableName("t_link_device_stats")
-public class LinkDeviceStatsDO extends BaseDO {
+public class LinkNetworkStatsDO extends BaseDO {
 
     /**
      * id
@@ -47,7 +47,7 @@ public class LinkDeviceStatsDO extends BaseDO {
     /**
      * 用户设备
      */
-    private String device;
+    private String network;
 
 
 }
