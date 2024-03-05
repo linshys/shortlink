@@ -6,6 +6,9 @@ import cn.hutool.core.date.Week;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -26,9 +29,11 @@ import org.jsoup.nodes.Element;
 import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.common.enums.VaildDataTypeEnum;
 import org.linshy.saas.project.dao.entity.LinkAccessStatsDO;
+import org.linshy.saas.project.dao.entity.LinkLocaleStatsDO;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dao.entity.ShortLinkGotoDO;
 import org.linshy.saas.project.dao.mapper.LinkAccessStatsMapper;
+import org.linshy.saas.project.dao.mapper.LinkLocaleStatsMapper;
 import org.linshy.saas.project.dao.mapper.ShortLinkGotoMapper;
 import org.linshy.saas.project.dao.mapper.ShortLinkMapper;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
@@ -43,6 +48,7 @@ import org.linshy.saas.project.toolkit.LinkUtil;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -54,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.linshy.saas.project.common.constant.RedisKeyConstant.*;
+import static org.linshy.saas.project.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 import static org.linshy.saas.project.toolkit.LinkUtil.getActualIp;
 
 
@@ -63,14 +70,14 @@ import static org.linshy.saas.project.toolkit.LinkUtil.getActualIp;
 public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements ShortLinkService {
 
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
-
     private final ShortLinkGotoMapper shortLinkGotoMapper;
-
     private final StringRedisTemplate stringRedisTemplate;
-
     private final RedissonClient redissonClient;
-
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLccalAmapKey;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLInkCreateReqDTO requestParam) {
@@ -291,8 +298,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
 
             // 防止uip重复
-            String uip = getActualIp((HttpServletRequest) request);
-            Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, uip);
+            String remoteAddr = getActualIp((HttpServletRequest) request);
+            Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, remoteAddr);
             Boolean uipFirstFlag = (uipAdded!=null&& uipAdded>0L);
 
             if (StrUtil.isBlank(gid))
@@ -316,6 +323,32 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .weekday(weekValue)
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+
+            // 根据ip信息统计用户地区信息
+            Map<String, Object> localeParamMap = new HashMap<>();
+            localeParamMap.put("key", statsLccalAmapKey);
+            localeParamMap.put("ip", remoteAddr);
+            String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
+            JSONObject localeResultObj = JSON.parseObject(localeResultStr);
+            String infoCode = localeResultObj.getString("infocode");
+            if (StrUtil.isNotBlank(infoCode) && infoCode.equals("10000"))
+            {
+                String province = localeResultObj.getString("province");
+                boolean unknownFlag = StrUtil.equals(province,"[]");
+                LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(new Date())
+                        .cnt(1)
+                        .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
+                        .country("中国")
+                        .province(unknownFlag ? "未知" : province)
+                        .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
+                        .build();
+                linkLocaleStatsMapper.shortLinkLocaleStats(linkLocaleStatsDO);
+            }
+
+
 
         }
         catch (Throwable ex)
