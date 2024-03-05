@@ -27,7 +27,7 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "WHERE " +
             "    full_short_url = #{param.fullShortUrl} " +
             "    AND gid = #{param.gid} " +
-            "    AND create_time BETWEEN #{param.startDate} and #{param.endDate} " +
+            "    AND create_time BETWEEN CONCAT(#{param.startDate},' 00:00:00') and CONCAT(#{param.endDate},' 23:59:59') " +
             "GROUP BY " +
             "    full_short_url, gid, ip " +
             "ORDER BY " +

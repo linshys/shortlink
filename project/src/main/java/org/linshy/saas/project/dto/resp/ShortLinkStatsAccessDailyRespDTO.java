@@ -1,11 +1,14 @@
 package org.linshy.saas.project.dto.resp;
 
-import lombok.Data;
+import lombok.*;
 
 /**
  * 短链接基础访问监控响应参数
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ShortLinkStatsAccessDailyRespDTO {
 
     /**
