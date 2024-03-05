@@ -28,14 +28,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.common.enums.VaildDataTypeEnum;
-import org.linshy.saas.project.dao.entity.LinkAccessStatsDO;
-import org.linshy.saas.project.dao.entity.LinkLocaleStatsDO;
-import org.linshy.saas.project.dao.entity.ShortLinkDO;
-import org.linshy.saas.project.dao.entity.ShortLinkGotoDO;
-import org.linshy.saas.project.dao.mapper.LinkAccessStatsMapper;
-import org.linshy.saas.project.dao.mapper.LinkLocaleStatsMapper;
-import org.linshy.saas.project.dao.mapper.ShortLinkGotoMapper;
-import org.linshy.saas.project.dao.mapper.ShortLinkMapper;
+import org.linshy.saas.project.dao.entity.*;
+import org.linshy.saas.project.dao.mapper.*;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
@@ -62,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.linshy.saas.project.common.constant.RedisKeyConstant.*;
 import static org.linshy.saas.project.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 import static org.linshy.saas.project.toolkit.LinkUtil.getActualIp;
+import static org.linshy.saas.project.toolkit.LinkUtil.getOs;
 
 
 @Slf4j
@@ -75,6 +70,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLccalAmapKey;
@@ -348,8 +344,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 linkLocaleStatsMapper.shortLinkLocaleStats(linkLocaleStatsDO);
             }
 
-
-
+            // 统计用户操作系统信息
+            LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .os(getOs((HttpServletRequest) request))
+                    .build();
+            linkOsStatsMapper.shortLinkOsStats(linkOsStatsDO);
         }
         catch (Throwable ex)
         {
