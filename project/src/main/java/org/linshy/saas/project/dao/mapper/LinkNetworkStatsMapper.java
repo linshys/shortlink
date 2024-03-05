@@ -3,7 +3,11 @@ package org.linshy.saas.project.dao.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.linshy.saas.project.dao.entity.LinkNetworkStatsDO;
+import org.linshy.saas.project.dto.req.ShortLinkStatsReqDTO;
+
+import java.util.List;
 
 public interface LinkNetworkStatsMapper extends BaseMapper<LinkNetworkStatsDO> {
     /**
@@ -13,4 +17,21 @@ public interface LinkNetworkStatsMapper extends BaseMapper<LinkNetworkStatsDO> {
             "VALUES( #{linkNetworkStats.fullShortUrl}, #{linkNetworkStats.gid}, #{linkNetworkStats.date}, #{linkNetworkStats.cnt}, #{linkNetworkStats.network}, NOW(), NOW(), 0) " +
             "ON DUPLICATE KEY UPDATE cnt = cnt +  #{linkNetworkStats.cnt};")
     void shortLinkNetworkState(@Param("linkNetworkStats") LinkNetworkStatsDO linkNetworkStatsDO);
+
+
+    /**
+     * 根据短链接获取指定日期内访问网络监控数据
+     */
+    @Select("SELECT " +
+            "    network, " +
+            "    SUM(cnt) AS cnt " +
+            "FROM " +
+            "    t_link_network_stats " +
+            "WHERE " +
+            "    full_short_url = #{param.fullShortUrl} " +
+            "    AND gid = #{param.gid} " +
+            "    AND date BETWEEN #{param.startDate} and #{param.endDate} " +
+            "GROUP BY " +
+            "    full_short_url, gid, network;")
+    List<LinkNetworkStatsDO> listNetworkStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 }
