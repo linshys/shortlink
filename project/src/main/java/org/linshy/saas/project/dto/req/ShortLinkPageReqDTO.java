@@ -15,4 +15,10 @@ public class ShortLinkPageReqDTO extends Page<ShortLinkDO> {
      */
     String gid;
 
+
+    /**
+     * 排序标识
+     */
+    private String orderTag;
+
 }
