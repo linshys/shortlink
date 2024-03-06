@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
+import org.linshy.saas.project.dto.req.ShortLinkGroupStatsAccessRecordReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkGroupStatsReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkStatsReqDTO;
@@ -44,5 +45,13 @@ public class ShortLinkStatsController {
     @GetMapping("/api/short-link/v1/stats/access-record")
     public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
         return Results.success(shortLinkStatsService.shortLinkStatsAccessRecord(requestParam));
+    }
+
+    /**
+     * 访问分组短链接指定时间内访问记录监控数据
+     */
+    @GetMapping("/api/short-link/v1/stats/access-record/group")
+    public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
+        return Results.success(shortLinkStatsService.groupShortLinkStatsAccessRecord(requestParam));
     }
 }
