@@ -1,42 +1,26 @@
-package org.linshy.saas.project.dao.entity;
+package org.linshy.saas.admin.remote.dto.resp;
 
-
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.linshy.saas.project.common.database.BaseDO;
+
+import java.util.Date;
 
 /**
- * 高频IP访问日志对象
+ * 短链接监控访问记录响应参数
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@TableName("t_link_access_logs")
-public class LinkAccessLogsDO extends BaseDO {
+@AllArgsConstructor
+public class ShortLinkStatsAccessRecordRespDTO {
 
     /**
-     * id
+     * 访客类型
      */
-    private Long id;
-
-    /**
-     * 完整短链接
-     */
-    private String fullShortUrl;
-
-    /**
-     * 分组标识
-     */
-    private String gid;
-
-    /**
-     * 用户信息
-     */
-    private String user;
+    private String uvType;
 
     /**
      * 浏览器
@@ -68,4 +52,14 @@ public class LinkAccessLogsDO extends BaseDO {
      */
     private String locale;
 
+    /**
+     * 用户信息
+     */
+    private String user;
+
+    /**
+     * 访问时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date createTime;
 }

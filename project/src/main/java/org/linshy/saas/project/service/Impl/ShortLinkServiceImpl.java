@@ -334,6 +334,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
             JSONObject localeResultObj = JSON.parseObject(localeResultStr);
             String infoCode = localeResultObj.getString("infocode");
+            String actualProvince;
+            String actualCity;
             if (StrUtil.isNotBlank(infoCode) && infoCode.equals("10000"))
             {
                 String province = localeResultObj.getString("province");
@@ -343,62 +345,69 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .gid(gid)
                         .date(new Date())
                         .cnt(1)
-                        .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
+                        .city(actualCity = unknownFlag ? "未知" : localeResultObj.getString("city"))
                         .country("中国")
-                        .province(unknownFlag ? "未知" : province)
+                        .province(actualProvince = unknownFlag ? "未知" : province)
                         .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleStats(linkLocaleStatsDO);
-            }
 
-            // 统计用户操作系统信息
-            String os = getOs((HttpServletRequest) request);
-            LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
-                    .fullShortUrl(fullShortUrl)
-                    .gid(gid)
-                    .date(new Date())
-                    .cnt(1)
-                    .os(os)
-                    .build();
-            linkOsStatsMapper.shortLinkOsStats(linkOsStatsDO);
-            // 统计用户浏览器信息
-            String browser = LinkUtil.getBrowser((HttpServletRequest) request);
-            LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
-                    .fullShortUrl(fullShortUrl)
-                    .gid(gid)
-                    .date(new Date())
-                    .cnt(1)
-                    .browser(browser)
-                    .build();
-            linkBrowserStatsMapper.shortLinkBrowserStats(linkBrowserStatsDO);
-            // 统计高频ip
-            LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
-                    .fullShortUrl(fullShortUrl)
-                    .gid(gid)
-                    .browser(browser)
-                    .os(os)
-                    .ip(remoteAddr)
-                    .user(uv.get())
-                    .build();
-            linkAccessLogsMapper.shortLinkAccessLogs(linkAccessLogsDO);
-            // 统计用户设备
-            LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
-                    .device(LinkUtil.getDevice(((HttpServletRequest) request)))
-                    .cnt(1)
-                    .gid(gid)
-                    .fullShortUrl(fullShortUrl)
-                    .date(new Date())
-                    .build();
-            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
-            // 统计用户网络类型
-            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
-                    .network(LinkUtil.getNetwork(((HttpServletRequest) request)))
-                    .cnt(1)
-                    .gid(gid)
-                    .fullShortUrl(fullShortUrl)
-                    .date(new Date())
-                    .build();
-            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
+
+                // 统计用户操作系统信息
+                String os = getOs((HttpServletRequest) request);
+                LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(new Date())
+                        .cnt(1)
+                        .os(os)
+                        .build();
+                linkOsStatsMapper.shortLinkOsStats(linkOsStatsDO);
+                // 统计用户浏览器信息
+                String browser = LinkUtil.getBrowser((HttpServletRequest) request);
+                LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(new Date())
+                        .cnt(1)
+                        .browser(browser)
+                        .build();
+                linkBrowserStatsMapper.shortLinkBrowserStats(linkBrowserStatsDO);
+                // 统计用户设备
+                String device = LinkUtil.getDevice(((HttpServletRequest) request));
+                LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
+                        .device(device)
+                        .cnt(1)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+                // 统计用户网络类型
+                String network = LinkUtil.getNetwork(((HttpServletRequest) request));
+                LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                        .network(network)
+                        .cnt(1)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
+
+                // 统计访问日志信息（高频ip等）
+                LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .browser(browser)
+                        .os(os)
+                        .ip(remoteAddr)
+                        .user(uv.get())
+                        .network(network)
+                        .device(device)
+                        .locale(StrUtil.join("-", "中国", actualProvince, actualCity))
+                        .build();
+                linkAccessLogsMapper.insert(linkAccessLogsDO);
+            }
         }
         catch (Throwable ex)
         {
