@@ -77,6 +77,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLccalAmapKey;
@@ -421,8 +422,19 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .locale(StrUtil.join("-", "中国", actualProvince, actualCity))
                         .build();
                 linkAccessLogsMapper.insert(linkAccessLogsDO);
-                // 记录每日访问数据
+                // 记录历史访问数据
                 baseMapper.incrementStats(gid, fullShortUrl, 1, uvFirstFlag.get() ? 1 : 0, uipFirstFlag ? 1 : 0);
+                // 记录每日访问数据
+                // TODO uvFirstFlag的判定有待改善
+                LinkStatsTodayDO linkStatsTodayDO = LinkStatsTodayDO.builder()
+                        .todayPv(1)
+                        .todayUv(uvFirstFlag.get() ? 1 : 0)
+                        .todayUip(uipFirstFlag ? 1 : 0)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);
             }
         }
         catch (Throwable ex)
