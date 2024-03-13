@@ -32,11 +32,10 @@ import org.linshy.saas.project.common.enums.VaildDataTypeEnum;
 import org.linshy.saas.project.dao.entity.*;
 import org.linshy.saas.project.dao.mapper.*;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkBatchCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
-import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
-import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
-import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
+import org.linshy.saas.project.dto.resp.*;
 import org.linshy.saas.project.service.ShortLinkService;
 import org.linshy.saas.project.toolkit.HashUtil;
 import org.linshy.saas.project.toolkit.LinkUtil;
@@ -82,16 +81,19 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLccalAmapKey;
 
+    @Value("${short-link.domain.default}")
+    private String createShortLinkDefaultDomain;
+
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLInkCreateReqDTO requestParam) {
 
         String shortLinkSuffix = generateSuffix(requestParam);
-        String fullShortUrl = StrBuilder.create(requestParam.getDomain())
+        String fullShortUrl = StrBuilder.create(createShortLinkDefaultDomain)
                 .append("/")
                 .append(shortLinkSuffix)
                 .toString();
         ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                .domain(requestParam.getDomain())
+                .domain(createShortLinkDefaultDomain)
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .createdType(requestParam.getCreatedType())
@@ -137,6 +139,37 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .gid(requestParam.getGid())
                 .originUrl(requestParam.getOriginUrl())
                 .build();
+    }
+
+    @Override
+    public ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
+        List<String> originUrls = requestParam.getOriginUrls();
+        List<String> describes = requestParam.getDescribes();
+        List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
+        for (int i = 0; i < originUrls.size(); i++) {
+            ShortLInkCreateReqDTO shortLInkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLInkCreateReqDTO.class);
+            shortLInkCreateReqDTO.setOriginUrl(originUrls.get(i));
+            shortLInkCreateReqDTO.setDescribe(originUrls.get(i));
+
+            try {
+                ShortLinkCreateRespDTO shortLink = createShortLink(shortLInkCreateReqDTO);
+                ShortLinkBaseInfoRespDTO shortLinkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()
+                        .fullShortUrl(shortLink.getFullShortUrl())
+                        .originUrl(shortLink.getOriginUrl())
+                        .describe(describes.get(i))
+                        .build();
+                result.add(shortLinkBaseInfoRespDTO);
+            }
+            catch (Throwable ex)
+            {
+                log.error("批量创建短链接失败，原始参数：{}", originUrls.get(i));
+            }
+        }
+        return ShortLinkBatchCreateRespDTO.builder()
+                .total(result.size())
+                .baseLinkInfos(result)
+                .build();
+
     }
 
     @Override
@@ -186,7 +219,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public void restoreUrl(String shortUri, ServletRequest request, ServletResponse response) {
         String serverName = request.getServerName();
-        String fullShortUrl = serverName + "/" + shortUri;
+        String serverPort = Optional.of(request.getServerPort())
+                .filter(each -> !Objects.equals(each, 80))
+                .map(String::valueOf)
+                .map(each -> ":" + each)
+                .orElse("");
+        String fullShortUrl = serverName + serverPort+ "/" + shortUri;
         // 缓存击穿问题 1.a.  检查redis缓存中是否存在
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink)) {
@@ -264,6 +302,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             lock.unlock();
         }
     }
+
 
     /**
      * 记录短链接访问信息

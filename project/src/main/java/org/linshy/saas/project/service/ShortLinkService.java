@@ -6,8 +6,10 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import org.linshy.saas.project.dao.entity.ShortLinkDO;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkBatchCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
+import org.linshy.saas.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
@@ -47,4 +49,12 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * @param response http响应
      */
     void restoreUrl(String shortUri, ServletRequest request, ServletResponse response);
+
+    /**
+     * 批量创建短链接
+     *
+     * @param requestParam 批量创建短链接请求参数
+     * @return 批量创建短链接返回参数
+     */
+    ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam);
 }

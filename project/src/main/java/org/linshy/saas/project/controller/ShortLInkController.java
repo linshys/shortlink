@@ -7,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
 import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkBatchCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
+import org.linshy.saas.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
@@ -35,6 +37,14 @@ public class ShortLInkController {
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLInkCreateReqDTO requestParam)
     {
         return Results.success(shortLinkService.createShortLink(requestParam));
+    }
+
+    /**
+     * 批量创建短链接
+     */
+    @PostMapping("/api/short-link/v1/create/batch")
+    public Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
+        return Results.success(shortLinkService.batchCreateShortLink(requestParam));
     }
 
 
