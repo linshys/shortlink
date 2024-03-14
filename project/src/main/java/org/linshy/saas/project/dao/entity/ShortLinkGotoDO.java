@@ -26,5 +26,5 @@ public class ShortLinkGotoDO {
     /**
      * 完整短链接uri
      */
-    String full_short_url;
+    String fullShortUrl;
 }
