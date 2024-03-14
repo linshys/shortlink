@@ -18,6 +18,10 @@ public class ShortLinkUpdateReqDTO {
     private String gid;
 
     /**
+     * 原始分组标识
+     */
+    private String originGid;
+    /**
      * 网页icon地址
      */
     private String favicon;
