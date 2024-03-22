@@ -28,4 +28,5 @@ public class BaseDO {
      */
     @TableField(fill = FieldFill.INSERT)
     private Integer delFlag;
+
 }

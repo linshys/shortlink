@@ -9,6 +9,10 @@ import java.util.Date;
 public class ShortLinkUpdateReqDTO {
 
     /**
+     * 原始链接
+     */
+    private String originUrl;
+    /**
      * 完整短链接
      */
     private String fullShortUrl;
