@@ -35,7 +35,7 @@ import org.linshy.saas.project.config.GotoDomainWhiteListConfiguration;
 import org.linshy.saas.project.dao.entity.*;
 import org.linshy.saas.project.dao.mapper.*;
 import org.linshy.saas.project.dto.biz.ShortLinkStatsRecordDTO;
-import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkBatchCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
@@ -95,7 +95,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private String createShortLinkDefaultDomain;
 
     @Override
-    public ShortLinkCreateRespDTO createShortLink(ShortLInkCreateReqDTO requestParam) {
+    public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         verificationWhitelist(requestParam.getOriginUrl());
         String shortLinkSuffix = generateSuffix(requestParam);
         String fullShortUrl = StrBuilder.create(createShortLinkDefaultDomain)
@@ -158,7 +158,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         List<String> describes = requestParam.getDescribes();
         List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
         for (int i = 0; i < originUrls.size(); i++) {
-            ShortLInkCreateReqDTO shortLInkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLInkCreateReqDTO.class);
+            ShortLinkCreateReqDTO shortLInkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLinkCreateReqDTO.class);
             shortLInkCreateReqDTO.setOriginUrl(originUrls.get(i));
             shortLInkCreateReqDTO.setDescribe(originUrls.get(i));
 
@@ -644,7 +644,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
 
-    private String generateSuffix(ShortLInkCreateReqDTO requestParam) {
+    private String generateSuffix(ShortLinkCreateReqDTO requestParam) {
         String originUrl = requestParam.getOriginUrl();
         int customGenerateCount = 0;
         String shortUri;

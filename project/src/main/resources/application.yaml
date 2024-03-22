@@ -36,9 +36,8 @@ short-link:
   goto-domain:
     white-list:
       enable: true
-      names: '拿个offer,知乎,掘金,博客园,必应'
+      names: '知乎,掘金,博客园,必应'
       details:
-        - nageoffer.com
         - zhihu.com
         - juejin.cn
         - cnblogs.com

@@ -16,7 +16,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShortLInkCreateReqDTO{
+public class ShortLinkCreateReqDTO {
 
 
     /**

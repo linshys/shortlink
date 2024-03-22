@@ -1,19 +1,21 @@
 package org.linshy.saas.project.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.project.common.convention.result.Result;
 import org.linshy.saas.project.common.convention.result.Results;
-import org.linshy.saas.project.dto.req.ShortLInkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkBatchCreateReqDTO;
+import org.linshy.saas.project.dto.req.ShortLinkCreateReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkPageReqDTO;
 import org.linshy.saas.project.dto.req.ShortLinkUpdateReqDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkCreateRespDTO;
 import org.linshy.saas.project.dto.resp.ShortLinkPageRespDTO;
+import org.linshy.saas.project.handler.CustomBlockHandler;
 import org.linshy.saas.project.service.ShortLinkService;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +36,12 @@ public class ShortLInkController {
      * @return 短链接信息
      */
     @PostMapping("/api/short-link/v1/create")
-    public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLInkCreateReqDTO requestParam)
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandlerMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
+    public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam)
     {
         return Results.success(shortLinkService.createShortLink(requestParam));
     }
