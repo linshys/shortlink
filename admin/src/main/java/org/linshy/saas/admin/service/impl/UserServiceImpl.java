@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.convention.exception.ClientException;
+import org.linshy.saas.admin.common.convention.exception.ServiceException;
 import org.linshy.saas.admin.common.enums.UserErrorCodeEnum;
 import org.linshy.saas.admin.dao.entity.UserDO;
 import org.linshy.saas.admin.dao.mapper.UserMapper;
@@ -52,7 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         UserDO userDO = baseMapper.selectOne(queryWrapper);
         // 抛异常
         if(userDO==null)
-            throw new ClientException(UserErrorCodeEnum.USER_NULL);
+            throw new ServiceException(UserErrorCodeEnum.USER_NULL);
         UserRespDTO result = new UserRespDTO();
         if(userDO != null){
             BeanUtils.copyProperties(userDO, result);       // 此方法需要判空才可以，否则会报错
