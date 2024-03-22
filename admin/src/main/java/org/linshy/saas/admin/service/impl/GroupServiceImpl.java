@@ -40,7 +40,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
     };
     private final RedissonClient redissonClient;
-    @Value("short-link.group.max-num")
+    @Value("${short-link.group.max-num}")
     private Integer groupMaxNum;
     /**
      * 新增分组
