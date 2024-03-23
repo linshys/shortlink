@@ -116,8 +116,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .fullShortUrl(fullShortUrl)
                 .favicon(getFavicon(requestParam.getOriginUrl()))
                 .build();
+        /**
+         * 将短链接信息加入跳转表
+         */
+        ShortLinkGotoDO shortLinkGotoDO = ShortLinkGotoDO.builder()
+                .fullShortUrl(fullShortUrl)
+                .gid(requestParam.getGid())
+                .build();
+
         try {
             baseMapper.insert(shortLinkDO);
+            shortLinkGotoMapper.insert(shortLinkGotoDO);
         } catch (DuplicateKeyException ex) {
             shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
             log.warn("短链接: {} 重复入库", fullShortUrl);
@@ -131,17 +140,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         stringRedisTemplate.opsForValue()
                 .set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), requestParam.getOriginUrl(),
                         LinkUtil.getLinkCacheValidDate(requestParam.getValidDate()), TimeUnit.MILLISECONDS);
-
-        /**
-         * 将短链接信息加入跳转表
-         */
-        ShortLinkGotoDO shortLinkGotoDO = ShortLinkGotoDO.builder()
-                .fullShortUrl(fullShortUrl)
-                .gid(requestParam.getGid())
-                .build();
-        shortLinkGotoMapper.insert(shortLinkGotoDO);
-
-
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl(shortLinkDO.getFullShortUrl())
                 .gid(requestParam.getGid())
@@ -540,7 +538,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (customGenerateCount > 10) {
                 throw new ServiceException("短链接创建次数过多，请稍后重试");
             }
-            originUrl += System.currentTimeMillis();
+            originUrl += UUID.randomUUID().toString();
             shortUri = HashUtil.hashToBase62(originUrl);
             if (!shortUriCreateCachePenetrationBloomFilter.contains(createShortLinkDefaultDomain + '/' + shortUri)) {
                 break;
