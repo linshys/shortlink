@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.linshy.saas.admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
+import static org.linshy.saas.admin.common.constant.RedisCacheConstant.USER_LOGIN_KEY;
 import static org.linshy.saas.admin.common.enums.UserErrorCodeEnum.*;
 
 /**
@@ -128,7 +129,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         /**
          * 判断用户是否已经登录
          */
-        Map<Object ,Object> hasLoginMap = stringRedisTemplate.opsForHash().entries("login_" + requestParam.getUsername());
+        Map<Object ,Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + requestParam.getUsername());
         if (CollUtil.isNotEmpty(hasLoginMap)) {
             String token = hasLoginMap.keySet().stream()
                     .findFirst()
@@ -139,9 +140,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
         String uuid = UUID.randomUUID().toString();
 
-        stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(),uuid,JSON.toJSONString(userDO));
+        stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY+requestParam.getUsername(),uuid,JSON.toJSONString(userDO));
         // TODO 开发完成后，更改token失效时间为30分钟
-        stringRedisTemplate.expire("login_"+requestParam.getUsername(),30L,TimeUnit.DAYS);
+        stringRedisTemplate.expire(USER_LOGIN_KEY+requestParam.getUsername(),30L,TimeUnit.DAYS);
         return  new UserLoginRespDTO(uuid);
 
 
@@ -150,14 +151,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     public Boolean checkLogin(String username, String token) {
 
-        return stringRedisTemplate.opsForHash().hasKey("login_"+username,token);
+        return stringRedisTemplate.opsForHash().hasKey(USER_LOGIN_KEY+username,token);
     }
 
     @Override
     public void logout(String username, String token) {
         if(checkLogin(username,token))
         {
-            stringRedisTemplate.delete("login_"+username);
+            stringRedisTemplate.delete(USER_LOGIN_KEY+username);
             return;
         }
 
