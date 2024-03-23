@@ -1,7 +1,10 @@
 package org.linshy.saas.project.mq.consumer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.dto.biz.ShortLinkStatsRecordDTO;
+import org.linshy.saas.project.mq.idempotent.MessageQueueIdempotentHandler;
 import org.linshy.saas.project.service.ShortLinkService;
 import org.redisson.api.RBlockingDeque;
 import org.redisson.api.RDelayedQueue;
@@ -17,12 +20,14 @@ import static org.linshy.saas.project.common.constant.RedisKeyConstant.DELAY_QUE
 /**
  * 延迟记录短链接统计组件
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DelayShortLinkStatsConsumer implements InitializingBean {
 
     private final RedissonClient redissonClient;
     private final ShortLinkService shortLinkService;
+    private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
     public void onMessage()
     {
         Executors.newSingleThreadExecutor(
@@ -43,8 +48,22 @@ public class DelayShortLinkStatsConsumer implements InitializingBean {
                             ShortLinkStatsRecordDTO statsRecordDTO = delayedQueue.poll();
                             if (statsRecordDTO!=null)
                             {
-                                shortLinkService.shortLinkStats(null, null, statsRecordDTO);
+                                if (!messageQueueIdempotentHandler.isMessageProcessed(statsRecordDTO.getKeys())) {
+                                    if (messageQueueIdempotentHandler.isAccomplish(statsRecordDTO.getKeys()))
+                                        return;
+                                    throw new ServiceException("消息未完成流程，消息队列重试");
+                                }
+                                try {
+                                    shortLinkService.shortLinkStats(null, null, statsRecordDTO);
+                                }
+                                catch (Throwable ex)
+                                {
+                                    messageQueueIdempotentHandler.delMessageProcessed(statsRecordDTO.getKeys());
+                                    log.error("延迟记录短链接监控消费异常", ex);
+                                }
+                                messageQueueIdempotentHandler.setAccomplish(statsRecordDTO.getKeys());
                                 continue;
+
                             }
                             LockSupport.parkUntil(500);
                         }

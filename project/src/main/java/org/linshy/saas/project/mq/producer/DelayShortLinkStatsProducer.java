@@ -1,5 +1,6 @@
 package org.linshy.saas.project.mq.producer;
 
+import cn.hutool.core.lang.UUID;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.project.dto.biz.ShortLinkStatsRecordDTO;
 import org.redisson.api.RBlockingDeque;
@@ -22,6 +23,7 @@ public class DelayShortLinkStatsProducer {
 
     public void send(ShortLinkStatsRecordDTO statsRecord)
     {
+        statsRecord.setKeys(UUID.fastUUID().toString());
         RBlockingDeque<ShortLinkStatsRecordDTO> blockingDeque = redissonClient.getBlockingDeque(DELAY_QUEUE_STATS_KEY);
         RDelayedQueue<ShortLinkStatsRecordDTO> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
         // 消息5s后才能被消费
