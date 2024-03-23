@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.linshy.saas.project.common.convention.exception.ServiceException;
 import org.linshy.saas.project.dao.entity.*;
 import org.linshy.saas.project.dao.mapper.*;
 import org.linshy.saas.project.dto.biz.ShortLinkStatsRecordDTO;
@@ -61,7 +62,9 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         String stream = message.getStream();
         RecordId id = message.getId();
         if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())) {
-            return;
+            if (messageQueueIdempotentHandler.isAccomplish(id.toString()))
+                return;
+            throw new ServiceException("消息未完成流程，消息队列重试");
         }
         try {
             Map<String, String> producerMap = message.getValue();
@@ -79,6 +82,9 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
             messageQueueIdempotentHandler.delMessageProcessed(id.toString());
             log.error("记录短链接监控消费异常");
         }
+
+        messageQueueIdempotentHandler.setAccomplish(id.toString());
+
     }
 
 
