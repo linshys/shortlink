@@ -2,15 +2,15 @@ package org.linshy.saas.admin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.linshy.saas.admin.common.biz.user.UserContext;
 import org.linshy.saas.admin.common.convention.exception.ClientException;
 import org.linshy.saas.admin.common.convention.result.Result;
 import org.linshy.saas.admin.dao.entity.GroupDO;
 import org.linshy.saas.admin.dao.mapper.GroupMapper;
-import org.linshy.saas.admin.remote.ShortLinkRemoteService;
+import org.linshy.saas.admin.remote.ShortLinkActualRemoteService;
 import org.linshy.saas.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import org.linshy.saas.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import org.linshy.saas.admin.service.RecycleBinService;
@@ -24,14 +24,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RecycleBinServiceImpl implements RecycleBinService {
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
 
-    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
-    };
     private final GroupMapper groupMapper;
 
 
     @Override
-    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam)
+    public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam)
     {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
@@ -42,7 +41,8 @@ public class RecycleBinServiceImpl implements RecycleBinService {
             throw new ClientException("用户分组信息不存在");
         }
         requestParam.setGidList(list.stream().map(GroupDO::getGid).toList());
-        return shortLinkRemoteService.pageRecycleBinShortLink(requestParam);
+        return shortLinkActualRemoteService.pageRecycleBinShortLink(requestParam.getGidList(), requestParam.getCurrent(), requestParam.getSize());
+
     }
 
 }

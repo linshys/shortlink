@@ -15,7 +15,7 @@ import org.linshy.saas.admin.dao.mapper.GroupMapper;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupSortReqDTO;
 import org.linshy.saas.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import org.linshy.saas.admin.dto.resp.ShortLinkGroupRespDTO;
-import org.linshy.saas.admin.remote.ShortLinkRemoteService;
+import org.linshy.saas.admin.remote.ShortLinkActualRemoteService;
 import org.linshy.saas.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import org.linshy.saas.admin.service.GroupService;
 import org.linshy.saas.admin.toolkit.RandomStringGenerator;
@@ -37,9 +37,9 @@ import static org.linshy.saas.admin.common.constant.RedisCacheConstant.LOCK_GROU
 @Service
 @RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
-    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
-    };
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
     private final RedissonClient redissonClient;
+
     @Value("${short-link.group.max-num}")
     private Integer groupMaxNum;
     /**
@@ -101,7 +101,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
         List<String> gidList = list.stream().map(GroupDO::getGid).toList();
         Result<List<ShortLinkCountQueryRespDTO>> listResult =
-                shortLinkRemoteService.listGroupShortLinkCount(gidList);
+                shortLinkActualRemoteService.listGroupShortLinkCount(gidList);
         List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(list, ShortLinkGroupRespDTO.class);
 
         // 将远程服务获取的结果转换为Map，以提高查找效率

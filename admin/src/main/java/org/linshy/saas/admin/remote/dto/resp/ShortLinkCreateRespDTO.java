@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShortLInkCreateRespDTO{
+public class ShortLinkCreateRespDTO {
 
 
     /**

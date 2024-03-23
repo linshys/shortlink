@@ -10,7 +10,7 @@ import java.util.Date;
  * 短链接请求对象
  */
 @Data
-public class ShortLInkCreateReqDTO{
+public class ShortLinkCreateReqDTO {
 
 
     /**
