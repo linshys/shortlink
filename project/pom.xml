@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sass-project</artifactId>
+    <artifactId>saas-project</artifactId>
 
     <dependencies>
         <dependency>

@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sass-gateway</artifactId>
+    <artifactId>saas-gateway</artifactId>
 
 
     <dependencies>

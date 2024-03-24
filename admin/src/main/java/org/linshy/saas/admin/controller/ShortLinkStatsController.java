@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 短链接监控控制层
  */
-@RestController
+@RestController(value = "shortLinkStatsControllerByAdmin")
 @RequiredArgsConstructor
 public class ShortLinkStatsController {
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;

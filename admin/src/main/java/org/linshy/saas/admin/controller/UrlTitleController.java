@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * URL标题接口层
  */
-@RestController
+@RestController(value = "urlTitleControllerByAdmin")
 @RequiredArgsConstructor
 public class UrlTitleController {
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;

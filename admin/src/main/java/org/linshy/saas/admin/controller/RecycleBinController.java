@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 回收站管理控制层
  */
-@RestController
+@RestController(value = "recycleBinControllerByAdmin")
 @RequiredArgsConstructor
 public class RecycleBinController {
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;

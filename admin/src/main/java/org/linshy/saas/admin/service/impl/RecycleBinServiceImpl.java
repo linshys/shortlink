@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * 回收站管理服务实现层
  */
-@Service
+@Service(value = "recycleBinServiceImplByAdmin")
 @RequiredArgsConstructor
 public class RecycleBinServiceImpl implements RecycleBinService {
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
