@@ -38,13 +38,14 @@ short-link:
   goto-domain:
     white-list:
       enable: true
-      names: '知乎,掘金,博客园,必应'
+      names: '菜鸟教程，知乎，必应，bilibili，百度贴吧'
       details:
+        - runoob.com
         - zhihu.com
-        - juejin.cn
-        - cnblogs.com
         - bing.com
         - cn.bing.com
+        - tieba.baidu.com
+        - bilibili.com
 
 mybatis-plus:
   configuration:

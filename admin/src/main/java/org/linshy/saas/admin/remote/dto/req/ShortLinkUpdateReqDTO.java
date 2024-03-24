@@ -7,7 +7,10 @@ import java.util.Date;
 
 @Data
 public class ShortLinkUpdateReqDTO {
-
+    /**
+     * 原始链接
+     */
+    private String originUrl;
     /**
      * 完整短链接
      */
