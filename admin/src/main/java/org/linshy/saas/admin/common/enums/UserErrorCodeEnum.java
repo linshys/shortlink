@@ -3,8 +3,6 @@ package org.linshy.saas.admin.common.enums;
 import org.linshy.saas.admin.common.convention.errorcode.IErrorCode;
 
 public enum UserErrorCodeEnum implements IErrorCode {
-
-    USER_TOKEN_FAIL("A000200", "用户Token验证失败"),
     USER_NULL("B000200","用户不存在"),
     USER_NAME_EXIST("B000201","用户名已存在"),
     USER_EXIST("B000202","用户信息已存在"),
