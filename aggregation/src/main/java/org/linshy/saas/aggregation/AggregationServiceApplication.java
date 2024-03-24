@@ -8,8 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 @SpringBootApplication(scanBasePackages = {
         "org.linshy.saas.admin",
-        "org.linshy.saas.project",
-        "org.linshy.saas.aggregation"
+        "org.linshy.saas.project"
 })
 @MapperScan(value = {
         "org.linshy.saas.project.dao.mapper",
