@@ -37,3 +37,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+project/src/main/resources/shardingsphere-config-prod.yaml
+aggregation/src/main/resources/shardingsphere-config-prod.yaml
+admin/src/main/resources/shardingsphere-config-prod.yaml
