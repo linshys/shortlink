@@ -5,7 +5,9 @@
 
 API 文档：https://apifox.com/apidoc/shared-63fe10fa-4f4e-427a-9be4-8900c2f3fac3
 
-![](D:\Project\Java\saas\assets\img\architecture.png)
+<p align="left">
+  <img src="./assets/img/architecture.png">
+</p>
 
 ## 简介
 
@@ -63,24 +65,11 @@ linshy 短链接系统，提供了一个高效且安全的平台来生成、管�
 - 短链接彻底删除
 
 ## 项目界面
-
-![](D:\Project\Java\saas\assets\img\Snipaste_2024-03-26_14-24-11.png)
-
-
-
-![](D:\Project\Java\saas\assets\img\Snipaste_2024-03-26_14-25-06.png)
-
-![](D:\Project\Java\saas\assets\img\Snipaste_2024-03-26_14-26-19.png)
-
-
-
-![](D:\Project\Java\saas\assets\img\Snipaste_2024-03-26_14-26-25.png)
-
-
-
-
-
-
-
+<p align="left">
+  <img src="./assets/img/Snipaste_2024-03-26_14-24-11.png">
+  <img src="./assets/img/Snipaste_2024-03-26_14-25-06.png">
+  <img src="./assets/img/Snipaste_2024-03-26_14-26-19.png">
+  <img src="./assets/img/Snipaste_2024-03-26_14-26-25.png">
+</p>
 
 
