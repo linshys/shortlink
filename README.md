@@ -1,5 +1,5 @@
 # linshy 短链接系统
-## Java17 + SpringBoot + SpringCloudAlibaba + RocketMQ + ShardingSphere + Redis + MySQL + Sentinel
+## SpringBoot + SpringCloudAlibaba + RocketMQ + ShardingSphere + Redis + MySQL + Sentinel
 
 项目预览：http://124.223.56.183/
 
